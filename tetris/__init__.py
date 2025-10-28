@@ -14,21 +14,21 @@ from badgeware import PixelFont, brushes, io, run, screen, shapes
 # base helper methods
 ###########################################################################
 
-last_button_press = 0
+# last_button_press = 0
 
 
-# from https://github.com/pimoroni/explorer/blob/main/examples/main.py#L39
-def debounce(button, debounce_ms=200):
-    """Simple button debounce function."""
-    global last_button_press  # noqa: PLW0603
-    try:
-        value = button.value() == 0
-        if value and io.ticks() - last_button_press > debounce_ms:
-            last_button_press = io.ticks()
-            return True
-    except NameError:
-        last_button_press = io.ticks()
-    return False
+# # from https://github.com/pimoroni/explorer/blob/main/examples/main.py#L39
+# def debounce(button, debounce_ms=200):
+#     """Simple button debounce function."""
+#     global last_button_press  # noqa: PLW0603
+#     try:
+#         value = button.value() == 0
+#         if value and io.ticks - last_button_press > debounce_ms:
+#             last_button_press = io.ticks
+#             return True
+#     except NameError:
+#         last_button_press = io.ticks
+#     return False
 
 
 WIDTH = 160
@@ -192,13 +192,13 @@ class Tetris:
         self.reset()
 
     def loop(self):
-        ticks = io.ticks()
+        ticks = io.ticks
 
-        if debounce(io.BUTTON_A):
+        if io.BUTTON_A in io.pressed:
             self.on_left_button()
-        if debounce(io.BUTTON_C):
+        if io.BUTTON_C in io.pressed:
             self.on_right_button()
-        if debounce(io.BUTTON_B):
+        if io.BUTTON_B in io.pressed:
             self.on_rotate_button()
 
         if ticks % 60 == 0:
