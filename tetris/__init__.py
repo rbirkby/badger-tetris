@@ -5,10 +5,12 @@
 # Original JavaScript implementation - Jake Gordon - https://github.com/jakesgordon/javascript-tetris
 # MIT licenced
 
+# import _thread
 import random
 import time
 
 from badgeware import PixelFont, brushes, io, run, screen, shapes
+# from music import play_song
 
 ###########################################################################
 # base helper methods
@@ -127,18 +129,16 @@ class Tetris:
     # pick randomly until the 'bag is empty'
     ##########################################
 
-    def random_piece(self):
-        i = self.i
-        j = self.j
-        l = self.l
-        o = self.o
-        s = self.s
-        t = self.t
-        z = self.z
+    pieces = []
 
-        pieces = [i, i, i, i, j, j, j, j, l, l, l, l, o, o, o, o, s, s, s, s, t, t, t, t, z, z, z, z]
-        idx = random.randint(0, len(pieces) - 1)
-        piece = pieces[idx]
+    def random_piece(self):
+        if len(self.pieces) == 0:
+            self.pieces = (
+                [self.i] * 4 + [self.j] * 4 + [self.l] * 4 + [self.o] * 4 + [self.s] * 4 + [self.t] * 4 + [self.z] * 4
+            )
+
+        idx = random.randint(0, len(self.pieces) - 1)
+        piece = self.pieces[idx]
         return {
             "type": piece,
             "dir": DIR["UP"],
@@ -152,6 +152,7 @@ class Tetris:
     ##################################
 
     def setup(self):
+        # screen.antialias = Image.X2
         screen.font = PixelFont.load("/system/assets/fonts/ark.ppf")
         screen.brush = BACKGROUND_BRUSH
         screen.clear()
@@ -394,8 +395,23 @@ def update():
     _game.loop()
 
 
+def init():
+    _game.setup()
+    # _thread.start_new_thread(music_task, ())
+
+
+# def on_exit():
+#     _thread.exit()
+
+
+def music_task():
+    while True:
+        play_song(buzzer_pin=15)
+
+
 _game = Tetris()
 
 if __name__ == "__main__":
     _game.setup()
+    # _thread.start_new_thread(music_task, ())
     run(update)
