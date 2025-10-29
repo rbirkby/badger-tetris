@@ -18,7 +18,7 @@ Install Micropython stubs with:
 
 Plug in the Pico.
 
-Use ```MicroPico:Connect``` to connect to the Pico. Use ```MicroPico:Upload file to Pico``` to transfer main.py to the Pico.
+Use ```MicroPico:Connect``` to connect to the Pico. Use Run command in VSCode status bar to execute the current file, alternatively double click the Reset button on badger and copy tetris/__init__.py to the device.
 
 
 Licence
