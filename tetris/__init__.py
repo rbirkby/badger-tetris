@@ -14,23 +14,6 @@ from badgeware import PixelFont, brushes, io, run, screen, shapes
 # base helper methods
 ###########################################################################
 
-# last_button_press = 0
-
-
-# # from https://github.com/pimoroni/explorer/blob/main/examples/main.py#L39
-# def debounce(button, debounce_ms=200):
-#     """Simple button debounce function."""
-#     global last_button_press  # noqa: PLW0603
-#     try:
-#         value = button.value() == 0
-#         if value and io.ticks - last_button_press > debounce_ms:
-#             last_button_press = io.ticks
-#             return True
-#     except NameError:
-#         last_button_press = io.ticks
-#     return False
-
-
 WIDTH = 160
 HEIGHT = 120
 COURT_X_OFFSET = 8
@@ -58,19 +41,23 @@ class Tetris:
     ###########################################
     # game variables (initialized during reset)
     ###########################################
-    dx = (0.6 * WIDTH) / nx  # pixel size of a single tetris block
-    dy = (0.75 * HEIGHT) / ny
-    blocks = []  # 2 dimensional array (nx*ny) representing tetris court - either empty block or occupied by a 'piece'
-    playing = True  # true|false - game is in progress
-    dt = 0  # time since starting this game
-    current = None  # the current and next piece
-    next_piece = None
-    score = 0  # the current score
-    vscore = 0  # the currently displayed score (it catches up to score in small chunks - like a spinning slot machine)
-    rows = 0  # number of completed rows in the current game
-    step = 0  # how long before current piece drops by 1 row
-    lost = False
-    notification = None
+    def __init__(self):
+        self.dx = (0.6 * WIDTH) / nx  # pixel size of a single tetris block
+        self.dy = (0.75 * HEIGHT) / ny
+        self.blocks = []  # 2 dimensional array (nx*ny) representing tetris court - either empty block or occupied by a 'piece'
+        self.playing = True  # true|false - game is in progress
+        self.dt = 0  # time since starting this game
+        self.current = None  # the current and next piece
+        self.next_piece = None
+        self.score = 0  # the current score
+        self.vscore = (
+            0  # the currently displayed score (it catches up to score in small chunks - like a spinning slot machine)
+        )
+        self.rows = 0  # number of completed rows in the current game
+        self.step = 0  # how long before current piece drops by 1 row
+        self.lost = False
+        self.notification = None
+        self.last_ticks = io.ticks
 
     ###########################################################################
     # tetris pieces
@@ -141,36 +128,15 @@ class Tetris:
     ##########################################
 
     def random_piece(self):
-        pieces = [
-            self.i,
-            self.i,
-            self.i,
-            self.i,
-            self.j,
-            self.j,
-            self.j,
-            self.j,
-            self.l,
-            self.l,
-            self.l,
-            self.l,
-            self.o,
-            self.o,
-            self.o,
-            self.o,
-            self.s,
-            self.s,
-            self.s,
-            self.s,
-            self.t,
-            self.t,
-            self.t,
-            self.t,
-            self.z,
-            self.z,
-            self.z,
-            self.z,
-        ]
+        i = self.i
+        j = self.j
+        l = self.l
+        o = self.o
+        s = self.s
+        t = self.t
+        z = self.z
+
+        pieces = [i, i, i, i, j, j, j, j, l, l, l, l, o, o, o, o, s, s, s, s, t, t, t, t, z, z, z, z]
         idx = random.randint(0, len(pieces) - 1)
         piece = pieces[idx]
         return {
@@ -192,8 +158,6 @@ class Tetris:
         self.reset()
 
     def loop(self):
-        ticks = io.ticks
-
         if io.BUTTON_A in io.pressed:
             self.on_left_button()
         if io.BUTTON_C in io.pressed:
@@ -201,15 +165,15 @@ class Tetris:
         if io.BUTTON_B in io.pressed:
             self.on_rotate_button()
 
-        if ticks % 60 == 0:
-            self.draw()
+        self.draw()
 
-            if self.playing and (ticks % 300 == 0):
-                self.drop()
+        if self.playing and (io.ticks - self.last_ticks > 300):
+            self.last_ticks = io.ticks
+            self.drop()
 
-                if self.lost:
-                    self.draw()
-                    time.sleep(1000)
+            if self.lost:
+                self.draw()
+                time.sleep(1000)
 
     def on_left_button(self):
         if self.lost:
@@ -341,7 +305,8 @@ class Tetris:
     def remove_lines(self):
         """Check for and remove completed lines."""
         n = 0
-        for y in range(ny - 1, -1, -1):
+        y = ny - 1
+        while y >= 0:
             complete = True
             for x in range(nx):
                 if not self.get_block(x, y):
@@ -349,8 +314,10 @@ class Tetris:
                     break
             if complete:
                 self.remove_line(y)
-                y += 1
                 n += 1
+                # stay on same y to re-check the shifted row
+            else:
+                y -= 1
         if n > 0:
             self.add_rows(n)
             self.add_score(100 * 2 ** (n - 1))
@@ -397,10 +364,10 @@ class Tetris:
         right = int((COURT_X_OFFSET + nx) * self.dx)
         bottom = int((ny + COURT_Y_OFFSET) * self.dy)
 
-        screen.draw(shapes.line(left, top, left, bottom))
-        screen.draw(shapes.line(left, bottom, right, bottom))
-        screen.draw(shapes.line(right, bottom, right, top))
-        screen.draw(shapes.line(right, top, left, top))
+        screen.draw(shapes.line(left, top, left, bottom, 1))
+        screen.draw(shapes.line(left, bottom, right, bottom, 1))
+        screen.draw(shapes.line(right, bottom, right, top, 1))
+        screen.draw(shapes.line(right, top, left, top, 1))
 
     def draw_next(self):
         assert self.next_piece is not None
@@ -409,20 +376,18 @@ class Tetris:
 
     def draw_score(self):
         screen.brush = TEXT_BRUSH
-        w, _ = screen.measure_text(str(self.score))  # TODO: center text
         screen.text(str(self.score), int(self.dx / 2), int(self.dy / 2), 240, 3)
 
     def draw_rows(self):
         screen.brush = TEXT_BRUSH
-        w, _ = screen.measure_text(str(self.rows))  # TODO: center text
-        screen.text(str(self.rows), int(self.dx / 2), 30)
+        screen.text(str(self.rows), int(self.dx / 2), 10)
 
     def draw_piece(self, piece_type, x, y, direction):
         self.each_block(piece_type, x, y, direction, lambda x, y: self.draw_block(x, y, piece_type["color"]))
 
     def draw_block(self, x, y, color):
         screen.brush = brushes.color(*color)
-        screen.rectangle(int(x * self.dx), int(y * self.dy), int(self.dx), int(self.dy))
+        screen.draw(shapes.rectangle(int(x * self.dx), int(y * self.dy), int(self.dx), int(self.dy)))
 
 
 def update():
@@ -430,7 +395,7 @@ def update():
 
 
 _game = Tetris()
-_game.setup()
 
 if __name__ == "__main__":
+    _game.setup()
     run(update)
