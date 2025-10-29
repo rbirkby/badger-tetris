@@ -10,6 +10,7 @@ import random
 import time
 
 from badgeware import PixelFont, brushes, io, run, screen, shapes
+
 # from music import play_song
 
 ###########################################################################
@@ -82,7 +83,7 @@ class Tetris:
     l = {"size": 3, "blocks": [0x4460, 0x0E80, 0xC440, 0x2E00], "color": (255, 165, 0)}
     o = {"size": 2, "blocks": [0xCC00, 0xCC00, 0xCC00, 0xCC00], "color": (255, 255, 0)}
     s = {"size": 3, "blocks": [0x06C0, 0x8C40, 0x6C00, 0x4620], "color": (0, 255, 0)}
-    t = {"size": 3, "blocks": [0x0E40, 0x4C40, 0x4E00, 0x4640], "color": (255, 165, 0)}
+    t = {"size": 3, "blocks": [0x0E40, 0x4C40, 0x4E00, 0x4640], "color": (128, 0, 128)}
     z = {"size": 3, "blocks": [0x0C60, 0x4C80, 0xC600, 0x2640], "color": (255, 0, 0)}
 
     ##################################################
@@ -152,13 +153,15 @@ class Tetris:
     ##################################
 
     def setup(self):
-        # screen.antialias = Image.X2
         screen.font = PixelFont.load("/system/assets/fonts/ark.ppf")
         screen.brush = BACKGROUND_BRUSH
         screen.clear()
         self.reset()
 
     def loop(self):
+        if io.BUTTON_UP in io.pressed or io.BUTTON_DOWN in io.pressed:
+            self.lose()
+
         if io.BUTTON_A in io.pressed:
             self.on_left_button()
         if io.BUTTON_C in io.pressed:
@@ -172,9 +175,9 @@ class Tetris:
             self.last_ticks = io.ticks
             self.drop()
 
-            if self.lost:
-                self.draw()
-                time.sleep(1000)
+        if self.lost:
+            self.notification = "Game Over !"
+            self.draw()
 
     def on_left_button(self):
         if self.lost:
@@ -253,6 +256,7 @@ class Tetris:
         self.next_piece = self.random_piece()
         self.lost = False
         self.notification = None
+        self.play()
 
     def move(self, direction):
         assert self.current is not None
@@ -338,6 +342,11 @@ class Tetris:
         self.draw_score()
         self.draw_rows()
         self.remove_lines()
+
+        if self.notification:
+            screen.brush = TEXT_BRUSH
+            w, h = screen.measure_text(self.notification)
+            screen.text(self.notification, (WIDTH - w) // 2, (HEIGHT - h) // 2)
 
     def draw_court(self):
         """Draw the tetris court and the current piece."""

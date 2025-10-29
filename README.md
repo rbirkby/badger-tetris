@@ -7,6 +7,7 @@ Badger Python port by Richard Birkby
 
 Original JavaScript [implementation](https://github.com/jakesgordon/javascript-tetris) - [Jake Gordon](https://jakesgordon.bsky.social)
 
+![](badger.jpg)
 
 Development
 -----------
