@@ -1,3 +1,5 @@
 typings
 .DS_Store
 preview_4x.png
+__pycache__
+*.pyc
