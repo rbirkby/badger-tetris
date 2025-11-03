@@ -31,6 +31,11 @@ STAR_COLOR_2 = (100, 255, 100)  # Retro green
 STAR_COLOR_3 = (255, 255, 255)  # White
 GRID_COLOR = (30, 40, 50)  # Subtle grid
 
+# Background configuration
+BACKGROUND_SEED = 42  # Seed for consistent star pattern
+STAR_COUNT = 30  # Number of stars in the background
+GRID_SPACING = 10  # Pixel spacing for retro grid pattern
+
 BACKGROUND_BRUSH = brushes.color(*BACKGROUND_COLOR)
 TEXT_BRUSH = brushes.color(*TEXT_COLOR)
 COURT_BRUSH = brushes.color(*COURT_COLOR)
@@ -102,20 +107,15 @@ class Tetris:
 
     def _init_background_stars(self):
         """Initialize static star positions for 1980s retro background."""
-        random.seed(42)  # Consistent pattern across runs
+        star_colors = [STAR_COLOR_1, STAR_COLOR_2, STAR_COLOR_3]
+        random.seed(BACKGROUND_SEED)
         self.stars = []
         # Create a starfield with GitHub/Copilot themed colors
-        for _ in range(30):
+        for _ in range(STAR_COUNT):
             x = random.randint(0, WIDTH - 1)
             y = random.randint(0, HEIGHT - 1)
             # Randomly assign star colors (blue, green, white)
-            color_choice = random.randint(0, 2)
-            if color_choice == 0:
-                color = STAR_COLOR_1  # GitHub blue
-            elif color_choice == 1:
-                color = STAR_COLOR_2  # Retro green
-            else:
-                color = STAR_COLOR_3  # White
+            color = star_colors[random.randint(0, len(star_colors) - 1)]
             size = random.randint(1, 2)
             self.stars.append({"x": x, "y": y, "color": color, "size": size})
         random.seed()  # Reset to random seed for game pieces
@@ -128,10 +128,9 @@ class Tetris:
 
         # Draw a subtle grid pattern (1980s computer aesthetic)
         screen.brush = brushes.color(*GRID_COLOR)
-        grid_spacing = 10
-        for x in range(0, WIDTH, grid_spacing):
+        for x in range(0, WIDTH, GRID_SPACING):
             screen.draw(shapes.line(x, 0, x, HEIGHT, 1))
-        for y in range(0, HEIGHT, grid_spacing):
+        for y in range(0, HEIGHT, GRID_SPACING):
             screen.draw(shapes.line(0, y, WIDTH, y, 1))
 
         # Draw starfield
