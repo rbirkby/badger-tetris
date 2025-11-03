@@ -2,6 +2,10 @@
 
 This repository is a MonaOS-based port of classic Tetris targeting the GitHub Badger. The code runs on-device under MonaOS and uses the badgeware library for rendering and input/output (display and buttons).
 
+## Runtime Environment
+
+**This codebase must only be run with MicroPython.** The code is designed specifically for the MicroPython interpreter running on embedded hardware (GitHub Badger with MonaOS). It uses MicroPython-specific modules and features that are not available in standard CPython, and conversely, it avoids CPython features that are not available in MicroPython.
+
 ## Architecture overview
 
 - Entry point: `tetris/__init__.py`
@@ -28,8 +32,9 @@ This repository is a MonaOS-based port of classic Tetris targeting the GitHub Ba
 ## Developer workflows
 
 - Running on device (MonaOS): deploy the app to the GitHub Badger running MonaOS following the standard MonaOS app deployment flow. The system launches `tetris/__init__.py` on-device.
-- Desktop execution: This repo imports MonaOS/badgeware-only modules. For local syntax checks, you can use the stubs under `typings/` (where available) and expect editor diagnostics for platform-specific modules. Ruff/Pylance warnings are expected on desktop.
+- Desktop execution: This repo imports MonaOS/badgeware-only modules that are MicroPython-specific. For local syntax checks, you can use MicroPython stubs under `typings/` (where available) and expect editor diagnostics for platform-specific modules. Ruff/Pylance warnings are expected on desktop when running with CPython.
 - No test suite is present. If adding tests, isolate hardware-bound code behind light wrappers or flags.
+- **Important**: The code uses only MicroPython-compatible features. Avoid using CPython-only modules or language features not supported by MicroPython (e.g., full enum module, typing annotations at runtime, etc.).
 
 ## Rendering and input specifics
 
@@ -49,8 +54,10 @@ This repository is a MonaOS-based port of classic Tetris targeting the GitHub Ba
 
 ## External dependencies and environment
 
+- **MicroPython runtime** (required) - All code must be compatible with MicroPython.
 - MonaOS on the GitHub Badger hardware.
-- badgeware library for display rendering and button I/O. These platform modules are not pip-installable for desktop; use stubs or ignore diagnostics in editors.
+- badgeware library for display rendering and button I/O. These platform modules are not pip-installable for desktop; use MicroPython stubs or ignore diagnostics in editors.
+- Standard MicroPython modules: `random`, `time`, `machine` (for hardware PWM/Pin control).
 
 ## Examples from code
 
@@ -66,3 +73,4 @@ This repository is a MonaOS-based port of classic Tetris targeting the GitHub Ba
 - Respect embedded constraints (keep memory use modest; avoid heavy libraries).
 - Don’t reorder badgeware/MonaOS imports; keep hardware- and OS-specific code centralized.
 - If you need to silence desktop-only import warnings, prefer editor config or per-file ignore; do not alter runtime behavior for device.
+- **MicroPython compatibility**: Only use features available in MicroPython. Avoid CPython-only modules and features. Test with MicroPython when possible.
