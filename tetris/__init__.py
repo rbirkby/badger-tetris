@@ -144,7 +144,7 @@ class Tetris:
             self._pieces_bag = ALL_PIECES * 4
 
         idx = random.randint(0, len(self._pieces_bag) - 1)
-        piece = self._pieces_bag[idx]
+        piece = self._pieces_bag.pop(idx)
         return {
             "type": piece,
             "dir": Direction.UP,
