@@ -9,6 +9,7 @@
     // Using stub-only packages, so ignore missing module source warnings
     "reportMissingModuleSource": "none"
   },
+  "micropico.syncFolder": "./tetris",
   "editor.rulers": [
     80,
     120
