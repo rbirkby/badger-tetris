@@ -7,7 +7,7 @@
 
 # import _thread
 import random
-import time
+from enum import IntEnum
 
 from badgeware import PixelFont, brushes, io, run, screen, shapes
 
@@ -33,11 +33,42 @@ COURT_BRUSH = brushes.color(*COURT_COLOR)
 ################
 # Game constants
 ################
-DIR = {"UP": 0, "RIGHT": 1, "DOWN": 2, "LEFT": 3, "MIN": 0, "MAX": 3}
+
+
+class Direction(IntEnum):
+    """Tetris piece rotation directions."""
+
+    UP = 0
+    RIGHT = 1
+    DOWN = 2
+    LEFT = 3
+
+
 speed = {"start": 0.6, "decrement": 0.005, "min": 0.1}
 nx = 15  # width of tetris court (in blocks)
 ny = 15  # height of tetris court (in blocks)
 nu = 3  # width/height of upcoming preview (in blocks)
+
+# Tetris piece type definitions
+# blocks: each element represents a rotation of the piece (0, 90, 180, 270)
+#         each element is a 16 bit integer where the 16 bits represent
+#         a 4x4 set of blocks, e.g. j_piece["blocks"][0] = 0x44C0
+#
+#             0100 = 0x4 << 3 = 0x4000
+#             0100 = 0x4 << 2 = 0x0400
+#             1100 = 0xC << 1 = 0x00C0
+#             0000 = 0x0 << 0 = 0x0000
+#                               ------
+#                               0x44C0
+I_PIECE = {"size": 4, "blocks": [0x0F00, 0x2222, 0x00F0, 0x4444], "color": (0, 255, 255)}
+J_PIECE = {"size": 3, "blocks": [0x44C0, 0x8E00, 0x6440, 0x0E20], "color": (0, 0, 255)}
+L_PIECE = {"size": 3, "blocks": [0x4460, 0x0E80, 0xC440, 0x2E00], "color": (255, 165, 0)}
+O_PIECE = {"size": 2, "blocks": [0xCC00, 0xCC00, 0xCC00, 0xCC00], "color": (255, 255, 0)}
+S_PIECE = {"size": 3, "blocks": [0x06C0, 0x8C40, 0x6C00, 0x4620], "color": (0, 255, 0)}
+T_PIECE = {"size": 3, "blocks": [0x0E40, 0x4C40, 0x4E00, 0x4640], "color": (128, 0, 128)}
+Z_PIECE = {"size": 3, "blocks": [0x0C60, 0x4C80, 0xC600, 0x2640], "color": (255, 0, 0)}
+
+ALL_PIECES = [I_PIECE, J_PIECE, L_PIECE, O_PIECE, S_PIECE, T_PIECE, Z_PIECE]
 
 
 class Tetris:
@@ -47,44 +78,22 @@ class Tetris:
     def __init__(self):
         self.dx = (0.6 * WIDTH) / nx  # pixel size of a single tetris block
         self.dy = (0.75 * HEIGHT) / ny
-        self.blocks = []  # 2 dimensional array (nx*ny) representing tetris court - either empty block or occupied by a 'piece'
+        # 2 dimensional array (nx*ny) representing tetris court
+        # - either empty block or occupied by a 'piece'
+        self.blocks = []
         self.playing = True  # true|false - game is in progress
         self.dt = 0  # time since starting this game
         self.current = None  # the current and next piece
         self.next_piece = None
         self.score = 0  # the current score
-        self.vscore = (
-            0  # the currently displayed score (it catches up to score in small chunks - like a spinning slot machine)
-        )
+        # the currently displayed score (catches up to score in small chunks)
+        self.vscore = 0
         self.rows = 0  # number of completed rows in the current game
         self.step = 0  # how long before current piece drops by 1 row
         self.lost = False
         self.notification = None
         self.last_ticks = io.ticks
-
-    ###########################################################################
-    # tetris pieces
-    #
-    # blocks: each element represents a rotation of the piece (0, 90, 180, 270)
-    #         each element is a 16 bit integer where the 16 bits represent
-    #         a 4x4 set of blocks, e.g. j.blocks[0] = 0x44C0
-    #
-    #             0100 = 0x4 << 3 = 0x4000
-    #             0100 = 0x4 << 2 = 0x0400
-    #             1100 = 0xC << 1 = 0x00C0
-    #             0000 = 0x0 << 0 = 0x0000
-    #                               ------
-    #                               0x44C0
-    #
-    ###########################################################################
-
-    i = {"size": 4, "blocks": [0x0F00, 0x2222, 0x00F0, 0x4444], "color": (0, 255, 255)}
-    j = {"size": 3, "blocks": [0x44C0, 0x8E00, 0x6440, 0x0E20], "color": (0, 0, 255)}
-    l = {"size": 3, "blocks": [0x4460, 0x0E80, 0xC440, 0x2E00], "color": (255, 165, 0)}
-    o = {"size": 2, "blocks": [0xCC00, 0xCC00, 0xCC00, 0xCC00], "color": (255, 255, 0)}
-    s = {"size": 3, "blocks": [0x06C0, 0x8C40, 0x6C00, 0x4620], "color": (0, 255, 0)}
-    t = {"size": 3, "blocks": [0x0E40, 0x4C40, 0x4E00, 0x4640], "color": (128, 0, 128)}
-    z = {"size": 3, "blocks": [0x0C60, 0x4C80, 0xC600, 0x2640], "color": (255, 0, 0)}
+        self._pieces_bag = []  # bag of pieces for random selection
 
     ##################################################
     # do the bit manipulation and iterate through each
@@ -130,19 +139,15 @@ class Tetris:
     # pick randomly until the 'bag is empty'
     ##########################################
 
-    pieces = []
-
     def random_piece(self):
-        if len(self.pieces) == 0:
-            self.pieces = (
-                [self.i] * 4 + [self.j] * 4 + [self.l] * 4 + [self.o] * 4 + [self.s] * 4 + [self.t] * 4 + [self.z] * 4
-            )
+        if len(self._pieces_bag) == 0:
+            self._pieces_bag = ALL_PIECES * 4
 
-        idx = random.randint(0, len(self.pieces) - 1)
-        piece = self.pieces[idx]
+        idx = random.randint(0, len(self._pieces_bag) - 1)
+        piece = self._pieces_bag.pop(idx)
         return {
             "type": piece,
-            "dir": DIR["UP"],
+            "dir": Direction.UP,
             "x": random.randint(0, nx - piece["size"]),
             "y": 0,
             "color": piece["color"],
@@ -183,13 +188,13 @@ class Tetris:
         if self.lost:
             self.reset()
 
-        self.move(DIR["LEFT"])
+        self.move(Direction.LEFT)
 
     def on_right_button(self):
         if self.lost:
             self.reset()
 
-        self.move(DIR["RIGHT"])
+        self.move(Direction.RIGHT)
 
     def on_rotate_button(self):
         if self.lost:
@@ -259,15 +264,16 @@ class Tetris:
         self.play()
 
     def move(self, direction):
-        assert self.current is not None
+        if self.current is None:
+            return False
 
         x = self.current["x"]
         y = self.current["y"]
-        if direction == DIR["RIGHT"]:
+        if direction == Direction.RIGHT:
             x += 1
-        elif direction == DIR["LEFT"]:
+        elif direction == Direction.LEFT:
             x -= 1
-        elif direction == DIR["DOWN"]:
+        elif direction == Direction.DOWN:
             y += 1
         if self.unoccupied(self.current["type"], x, y, self.current["dir"]):
             self.current["x"] = x
@@ -277,34 +283,36 @@ class Tetris:
         return False
 
     def rotate(self):
-        assert self.current is not None
+        if self.current is None:
+            return
 
-        newdir = DIR["MIN"] if self.current["dir"] == DIR["MAX"] else self.current["dir"] + 1
+        newdir = Direction.UP if self.current["dir"] == Direction.LEFT else self.current["dir"] + 1
         if self.unoccupied(self.current["type"], self.current["x"], self.current["y"], newdir):
             self.current["dir"] = newdir
 
     def drop(self):
-        if not self.move(DIR["DOWN"]):
+        if not self.move(Direction.DOWN):
             self.add_score(10)
             self.drop_piece()
             self.remove_lines()
             self.current = self.next_piece
             self.next_piece = self.random_piece()
 
-            assert self.current is not None
-
-            if self.occupied(self.current["type"], self.current["x"], self.current["y"], self.current["dir"]):
+            if self.current is not None and self.occupied(
+                self.current["type"], self.current["x"], self.current["y"], self.current["dir"]
+            ):
                 self.lose()
 
     def drop_piece(self):
-        assert self.current is not None
+        if self.current is None:
+            return
 
         self.each_block(
             self.current["type"],
             self.current["x"],
             self.current["y"],
             self.current["dir"],
-            lambda x, y: self.set_block(x, y, self.current["type"] if self.current is not None else None),
+            lambda x, y: self.set_block(x, y, self.current["type"]),
         )
 
     def remove_lines(self):
@@ -350,7 +358,9 @@ class Tetris:
 
     def draw_court(self):
         """Draw the tetris court and the current piece."""
-        assert self.current is not None
+        if self.current is None:
+            return
+
         screen.brush = BACKGROUND_BRUSH
         screen.clear()
 
@@ -380,8 +390,10 @@ class Tetris:
         screen.draw(shapes.line(right, top, left, top, 1))
 
     def draw_next(self):
-        assert self.next_piece is not None
-        direction = DIR["RIGHT"] if self.next_piece["type"] in (self.z, self.i, self.s, self.z, self.t) else DIR["UP"]
+        if self.next_piece is None:
+            return
+
+        direction = Direction.RIGHT if self.next_piece["type"] in (Z_PIECE, I_PIECE, S_PIECE, T_PIECE) else Direction.UP
         self.draw_piece(self.next_piece["type"], 1, 6, direction)
 
     def draw_score(self):
@@ -414,8 +426,12 @@ def init():
 
 
 def music_task():
-    while True:
-        play_song(buzzer_pin=15)
+    """Play background music (currently disabled)."""
+    # Uncomment when music module is properly imported
+    # from music import play_song
+    # while True:
+    #     play_song(buzzer_pin=15)
+    pass
 
 
 _game = Tetris()
