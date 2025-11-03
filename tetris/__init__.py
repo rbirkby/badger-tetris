@@ -8,7 +8,7 @@
 # import _thread
 import random
 
-from badgeware import PixelFont, brushes, io, run, screen, shapes
+from badgeware import Image, PixelFont, brushes, io, run, screen, shapes
 
 # from music import play_song
 
@@ -24,17 +24,6 @@ COURT_Y_OFFSET = 2
 BACKGROUND_COLOR = (13, 17, 23)
 TEXT_COLOR = (255, 255, 255)
 COURT_COLOR = (0, 255, 0)
-
-# 1980s retro color palette (GitHub-themed)
-STAR_COLOR_1 = (0, 120, 255)  # GitHub blue
-STAR_COLOR_2 = (100, 255, 100)  # Retro green
-STAR_COLOR_3 = (255, 255, 255)  # White
-GRID_COLOR = (30, 40, 50)  # Subtle grid
-
-# Background configuration
-BACKGROUND_SEED = 42  # Seed for consistent star pattern
-STAR_COUNT = 30  # Number of stars in the background
-GRID_SPACING = 10  # Pixel spacing for retro grid pattern
 
 BACKGROUND_BRUSH = brushes.color(*BACKGROUND_COLOR)
 TEXT_BRUSH = brushes.color(*TEXT_COLOR)
@@ -102,41 +91,12 @@ class Tetris:
         self.notification = None
         self.last_ticks = io.ticks
         self._pieces_bag = []  # bag of pieces for random selection
-        # Static star positions for retro background (seeded for consistency)
-        self._init_background_stars()
-
-    def _init_background_stars(self):
-        """Initialize static star positions for 1980s retro background."""
-        star_colors = [STAR_COLOR_1, STAR_COLOR_2, STAR_COLOR_3]
-        random.seed(BACKGROUND_SEED)
-        self.stars = []
-        # Create a starfield with GitHub/Copilot themed colors
-        for _ in range(STAR_COUNT):
-            x = random.randint(0, WIDTH - 1)
-            y = random.randint(0, HEIGHT - 1)
-            # Randomly assign star colors (blue, green, white)
-            color = star_colors[random.randint(0, len(star_colors) - 1)]
-            size = random.randint(1, 2)
-            self.stars.append({"x": x, "y": y, "color": color, "size": size})
-        random.seed()  # Reset to random seed for game pieces
+        # Load background image
+        self.background_image = Image.load("assets/background.png")
 
     def draw_retro_background(self):
         """Draw a 1980s-style 8-bit background with GitHub/Copilot theme."""
-        # Fill with base background color
-        screen.brush = BACKGROUND_BRUSH
-        screen.clear()
-
-        # Draw a subtle grid pattern (1980s computer aesthetic)
-        screen.brush = brushes.color(*GRID_COLOR)
-        for x in range(0, WIDTH, GRID_SPACING):
-            screen.draw(shapes.line(x, 0, x, HEIGHT, 1))
-        for y in range(0, HEIGHT, GRID_SPACING):
-            screen.draw(shapes.line(0, y, WIDTH, y, 1))
-
-        # Draw starfield
-        for star in self.stars:
-            screen.brush = brushes.color(*star["color"])
-            screen.draw(shapes.rectangle(star["x"], star["y"], star["size"], star["size"]))
+        screen.blit(self.background_image, 0, 0)
 
     ##################################################
     # do the bit manipulation and iterate through each
