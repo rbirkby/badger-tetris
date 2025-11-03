@@ -7,7 +7,6 @@
 
 # import _thread
 import random
-from enum import IntEnum
 
 from badgeware import PixelFont, brushes, io, run, screen, shapes
 
@@ -34,14 +33,12 @@ COURT_BRUSH = brushes.color(*COURT_COLOR)
 # Game constants
 ################
 
-
-class Direction(IntEnum):
-    """Tetris piece rotation directions."""
-
-    UP = 0
-    RIGHT = 1
-    DOWN = 2
-    LEFT = 3
+# Direction constants for piece rotation
+# Using simple integers instead of IntEnum for MicroPython compatibility
+DIR_UP = 0
+DIR_RIGHT = 1
+DIR_DOWN = 2
+DIR_LEFT = 3
 
 
 speed = {"start": 0.6, "decrement": 0.005, "min": 0.1}
@@ -147,7 +144,7 @@ class Tetris:
         piece = self._pieces_bag.pop(idx)
         return {
             "type": piece,
-            "dir": Direction.UP,
+            "dir": DIR_UP,
             "x": random.randint(0, nx - piece["size"]),
             "y": 0,
             "color": piece["color"],
@@ -188,13 +185,13 @@ class Tetris:
         if self.lost:
             self.reset()
 
-        self.move(Direction.LEFT)
+        self.move(DIR_LEFT)
 
     def on_right_button(self):
         if self.lost:
             self.reset()
 
-        self.move(Direction.RIGHT)
+        self.move(DIR_RIGHT)
 
     def on_rotate_button(self):
         if self.lost:
@@ -269,11 +266,11 @@ class Tetris:
 
         x = self.current["x"]
         y = self.current["y"]
-        if direction == Direction.RIGHT:
+        if direction == DIR_RIGHT:
             x += 1
-        elif direction == Direction.LEFT:
+        elif direction == DIR_LEFT:
             x -= 1
-        elif direction == Direction.DOWN:
+        elif direction == DIR_DOWN:
             y += 1
         if self.unoccupied(self.current["type"], x, y, self.current["dir"]):
             self.current["x"] = x
@@ -286,12 +283,12 @@ class Tetris:
         if self.current is None:
             return
 
-        newdir = Direction.UP if self.current["dir"] == Direction.LEFT else self.current["dir"] + 1
+        newdir = DIR_UP if self.current["dir"] == DIR_LEFT else self.current["dir"] + 1
         if self.unoccupied(self.current["type"], self.current["x"], self.current["y"], newdir):
             self.current["dir"] = newdir
 
     def drop(self):
-        if not self.move(Direction.DOWN):
+        if not self.move(DIR_DOWN):
             self.add_score(10)
             self.drop_piece()
             self.remove_lines()
@@ -393,7 +390,7 @@ class Tetris:
         if self.next_piece is None:
             return
 
-        direction = Direction.RIGHT if self.next_piece["type"] in (Z_PIECE, I_PIECE, S_PIECE, T_PIECE) else Direction.UP
+        direction = DIR_RIGHT if self.next_piece["type"] in (Z_PIECE, I_PIECE, S_PIECE, T_PIECE) else DIR_UP
         self.draw_piece(self.next_piece["type"], 1, 6, direction)
 
     def draw_score(self):
