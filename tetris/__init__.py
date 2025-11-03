@@ -25,6 +25,12 @@ BACKGROUND_COLOR = (13, 17, 23)
 TEXT_COLOR = (255, 255, 255)
 COURT_COLOR = (0, 255, 0)
 
+# 1980s retro color palette (GitHub-themed)
+STAR_COLOR_1 = (0, 120, 255)  # GitHub blue
+STAR_COLOR_2 = (100, 255, 100)  # Retro green
+STAR_COLOR_3 = (255, 255, 255)  # White
+GRID_COLOR = (30, 40, 50)  # Subtle grid
+
 BACKGROUND_BRUSH = brushes.color(*BACKGROUND_COLOR)
 TEXT_BRUSH = brushes.color(*TEXT_COLOR)
 COURT_BRUSH = brushes.color(*COURT_COLOR)
@@ -91,6 +97,47 @@ class Tetris:
         self.notification = None
         self.last_ticks = io.ticks
         self._pieces_bag = []  # bag of pieces for random selection
+        # Static star positions for retro background (seeded for consistency)
+        self._init_background_stars()
+
+    def _init_background_stars(self):
+        """Initialize static star positions for 1980s retro background."""
+        random.seed(42)  # Consistent pattern across runs
+        self.stars = []
+        # Create a starfield with GitHub/Copilot themed colors
+        for _ in range(30):
+            x = random.randint(0, WIDTH - 1)
+            y = random.randint(0, HEIGHT - 1)
+            # Randomly assign star colors (blue, green, white)
+            color_choice = random.randint(0, 2)
+            if color_choice == 0:
+                color = STAR_COLOR_1  # GitHub blue
+            elif color_choice == 1:
+                color = STAR_COLOR_2  # Retro green
+            else:
+                color = STAR_COLOR_3  # White
+            size = random.randint(1, 2)
+            self.stars.append({"x": x, "y": y, "color": color, "size": size})
+        random.seed()  # Reset to random seed for game pieces
+
+    def draw_retro_background(self):
+        """Draw a 1980s-style 8-bit background with GitHub/Copilot theme."""
+        # Fill with base background color
+        screen.brush = BACKGROUND_BRUSH
+        screen.clear()
+
+        # Draw a subtle grid pattern (1980s computer aesthetic)
+        screen.brush = brushes.color(*GRID_COLOR)
+        grid_spacing = 10
+        for x in range(0, WIDTH, grid_spacing):
+            screen.draw(shapes.line(x, 0, x, HEIGHT, 1))
+        for y in range(0, HEIGHT, grid_spacing):
+            screen.draw(shapes.line(0, y, WIDTH, y, 1))
+
+        # Draw starfield
+        for star in self.stars:
+            screen.brush = brushes.color(*star["color"])
+            screen.draw(shapes.rectangle(star["x"], star["y"], star["size"], star["size"]))
 
     ##################################################
     # do the bit manipulation and iterate through each
@@ -358,8 +405,8 @@ class Tetris:
         if self.current is None:
             return
 
-        screen.brush = BACKGROUND_BRUSH
-        screen.clear()
+        # Draw 1980s retro background
+        self.draw_retro_background()
 
         if self.playing:
             self.draw_piece(
