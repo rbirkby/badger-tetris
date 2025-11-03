@@ -92,7 +92,7 @@ class Tetris:
         self.last_ticks = io.ticks
         self._pieces_bag = []  # bag of pieces for random selection
         # Load background image
-        self.background_image = Image.load("assets/background.png")
+        self.background_image = Image.load("tetris/assets/background.png")
 
     def draw_retro_background(self):
         """Draw a 1980s-style 8-bit background with GitHub/Copilot theme."""
