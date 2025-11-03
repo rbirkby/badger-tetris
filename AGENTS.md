@@ -57,7 +57,40 @@ This repository is a MonaOS-based port of classic Tetris targeting the GitHub Ba
 - **MicroPython runtime** (required) - All code must be compatible with MicroPython.
 - MonaOS on the GitHub Badger hardware.
 - badgeware library for display rendering and button I/O. These platform modules are not pip-installable for desktop; use MicroPython stubs or ignore diagnostics in editors.
-- Standard MicroPython modules: `random`, `time`, `machine` (for hardware PWM/Pin control).
+- sys.version is 3.4.0; MicroPython v1.14-5485.gddae88e91.dirty on 2025-10-20
+- Standard MicroPython modules: `random`, `time`, `machine` (for hardware PWM/Pin control). And also the following modules:
+  __main__          aye_arr/nec/send  breakout_rgbmatrix5x5               pcf85063a
+  _asyncio          aye_arr/pulse/common                breakout_rtc      picovector
+  _boot_fat         aye_arr/pulse/pio/rx                breakout_scd41    pimoroni
+  _io               aye_arr/pulse/pio/tx                breakout_sgp30    pimoroni_i2c
+  _msc              aye_arr/pulse/receive               breakout_trackball                  platform
+  _onewire          aye_arr/pulse/send                  breakout_vl53l5cx powman
+  _rp2              badgeware         builtins          qrcode
+  _webrepl          binascii          cmath             qwstpad
+  adcfft            bluetooth         collections       random
+  aioble/__init__   board             cppmem            re
+  aioble/central    boot              cryptolib         requests/__init__
+  aioble/client     breakout_as7262   datetime          rp2
+  aioble/core       breakout_as7343   deflate           select
+  aioble/device     breakout_bh1745   errno             socket
+  aioble/l2cap      breakout_bme280   ezwifi            ssl
+  aioble/peripheral breakout_bme68x   framebuf          st7789
+  aioble/security   breakout_bme69x   gc                struct
+  aioble/server     breakout_bmp280   hardware_test     sys
+  array             breakout_dotmatrix                  hashlib           time
+  asyncio/__init__  breakout_encoder  heapq             tls
+  asyncio/core      breakout_encoder_wheel              io                uasyncio
+  asyncio/event     breakout_icp10125 json              uctypes
+  asyncio/funcs     breakout_ioexpander                 lwip              ulab
+  asyncio/lock      breakout_ltr559   machine           umqtt/simple
+  asyncio/stream    breakout_matrix11x7                 math              urequests
+  aye_arr/nec/__init__                breakout_mics6814 micropython       urllib/urequest
+  aye_arr/nec/common                  breakout_msa301   mip/__init__      vfs
+  aye_arr/nec/receive                 breakout_paa5100  network           webrepl
+  aye_arr/nec/remotes/__init__        breakout_pmw3901  ntptime           webrepl_setup
+  aye_arr/nec/remotes/descriptor      breakout_potentiometer              os                websocket
+- badgeware exports the following:
+  ['__class__', '__name__', 'BUTTON_A', 'BUTTON_B', 'BUTTON_C', 'BUTTON_DOWN', 'BUTTON_HOME', 'BUTTON_UP', 'CHARGE_STAT', 'HEIGHT', 'Image', 'Matrix', 'PixelFont', 'SENSE_1V1', 'VBAT_SENSE', 'VBUS_DETECT', 'WIDTH', '__dict__', '__file__', 'brushes', 'floor', 'gc', 'io', 'json', 'machine', 'os', 'pcf85063a', 'powman', 'screen', 'shapes', 'sleep', 'st7789', 'sys', 'time', 'ASSETS', 'AnimatedSprite', 'Assets', 'BAT_MAX', 'BAT_MIN', 'BUTTONS', 'BitmapFont', 'Colors', 'DEFAULT_FONT', 'ERROR_FONT', 'LIGHT_SENSOR', 'MAX_BACKLIGHT_SAMPLES', 'Particle', 'ParticleGenerator', 'SYSTEM_FAST', 'SYSTEM_NORMAL', 'SYSTEM_SLOW', 'SYSTEM_TURBO', 'SYSTEM_VERY_SLOW', 'SpriteSheet', 'State', '_lf', 'backlight_smoothing', 'backlight_smoothing_idx', 'clamp', 'conversion_factor', 'display', 'file_exists', 'free', 'get_battery_level', 'get_disk_usage', 'get_exception', 'get_light', 'get_usb_connected', 'is_charging', 'is_dir', 'localtime_to_rtc', 'message', 'pressed_to_wake', 'rtc', 'rtc_to_localtime', 'run', 'sample_adc_u16', 'stream', 'time_from_ntp', 'update_backlight', 'warning', 'woken_by_button', 'woken_by_reset', 'wrap_and_measure']
 
 ## Examples from code
 
@@ -67,6 +100,7 @@ This repository is a MonaOS-based port of classic Tetris targeting the GitHub Ba
   - `if unoccupied(current["type"], new_x, new_y, new_dir): ...`
 - Line removal and scoring:
   - `remove_lines()` scans from bottom up; after `n` lines: `add_rows(n)` and `add_score(100 * 2 ** (n - 1))`.
+- Further code samples available at https://github.com/badger/home
 
 ## Agent tips
 
