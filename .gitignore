@@ -1,2 +1,7 @@
 typings
 .DS_Store
+preview_4x.png
+__pycache__
+*.pyc
+preview.html
+screenshot.png

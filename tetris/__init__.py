@@ -8,7 +8,7 @@
 # import _thread
 import random
 
-from badgeware import PixelFont, brushes, io, run, screen, shapes
+from badgeware import Image, PixelFont, brushes, io, run, screen, shapes
 
 # from music import play_song
 
@@ -91,6 +91,12 @@ class Tetris:
         self.notification = None
         self.last_ticks = io.ticks
         self._pieces_bag = []  # bag of pieces for random selection
+        # Load background image
+        self.background_image = Image.load("tetris/assets/background.png")
+
+    def draw_retro_background(self):
+        """Draw a 1980s-style 8-bit background with GitHub/Copilot theme."""
+        screen.blit(self.background_image, 0, 0)
 
     ##################################################
     # do the bit manipulation and iterate through each
@@ -358,8 +364,8 @@ class Tetris:
         if self.current is None:
             return
 
-        screen.brush = BACKGROUND_BRUSH
-        screen.clear()
+        # Draw 1980s retro background
+        self.draw_retro_background()
 
         if self.playing:
             self.draw_piece(
